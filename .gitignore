@@ -1,0 +1,32 @@
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Executables
+*.exe
+*.out
+*.app
+*.hex
+*.bin
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Other
+*.lst
+.vscode/
+doc/**
+!doc/Doxyfile
