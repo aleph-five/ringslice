@@ -21,43 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#include "ringslice_util.h"
 #include "ringslice.h"
 
 DBC_MODULE_NAME(RINGSLICE_MODULE)
-
-/*!
- * Increments pointer with wrapping around
- * @param[in] curr pointer to increment
- * @param[in] absolute_offset offset to increment
- * @param[in] start start pointer of wrapping
- * @param[in] end end pointer of wrapping
- *
- * @return pointer between start (including) and end (not including)
- */
-static inline uint8_t *ringslice_ptr_increment_wrap_around(uint8_t const *curr, ringslice_cnt_t absolute_offset, uint8_t const *const start, uint8_t const *const end) {
-    DBC_REQUIRE(666, start <= curr && curr < end);
-    uint8_t *next_unwrapped = (uint8_t *)&(curr[absolute_offset]);
-    uint8_t *ret = (next_unwrapped < end) ? (next_unwrapped) : (uint8_t *)(&(start[next_unwrapped - end]));
-    DBC_ENSURE(999, start <= ret && ret < end);
-    return ret;
-}
-
-/*!
- * Decrements pointer with wrapping around
- * @param[in] curr pointer to decrement
- * @param[in] absolute_offset offset to decrement
- * @param[in] start start pointer of wrapping
- * @param[in] end end pointer of wrapping
- *
- * @return pointer between start (including) and end (not including)
- */
-static inline uint8_t *ringslice_ptr_decrement_wrap_around(uint8_t const *curr, ringslice_cnt_t absolute_offset, uint8_t const *const start, uint8_t const *const end) {
-    DBC_REQUIRE(667, start <= curr && curr < end);
-    uint8_t *prev_unwrapped = (uint8_t *)&(curr[-absolute_offset]);
-    uint8_t *ret = (prev_unwrapped >= start) ? (prev_unwrapped) : (uint8_t *)(&(end[prev_unwrapped - start]));
-    DBC_ENSURE(998, start <= ret && ret < end);
-    return ret;
-}
 
 ringslice_t ringslice_strstr(ringslice_t const *const me, char const *substr) {
     ringslice_t substr_slice = ringslice_initializer(me->buf, me->buf_size, me->first, me->first);  // initialize with empty slice

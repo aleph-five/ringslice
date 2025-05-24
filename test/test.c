@@ -181,4 +181,27 @@ TEST_GROUP("Basic") {
         VERIFY(ringslice_strcmp(&subrs, "abcdefghi") == 0);
     }
 
+    TEST("Testing ringslice_sscanf(), discontinuous ring buffer, integers") {
+        char const test_buf[] = "G: 1, 2, 0xFFEF +CRE";
+        ringslice_t rs = ringslice_initializer((uint8_t *)test_buf,
+                                                strlen(test_buf),
+                                                strlen(test_buf) - strlen("+CRE"),
+                                                strlen(test_buf) - strlen("+CRE") - 1);
+        long a, b, c;
+        int argc = ringslice_scanf(&rs, "+CREG:%d,%d,%x\n", &a, &b, &c);
+        VERIFY(argc == 3);
+        VERIFY(a == 1);
+        VERIFY(b == 2);
+        VERIFY(c == 0xFFEF);
+    }
+
+    SKIP_TEST("Testing ringslice_sscanf(), discontinuous ring buffer, strings") {
+        char const test_buf[] = "R:\"REC UNREAD\"  +CMG";
+        ringslice_t rs = ringslice_initializer((uint8_t *)test_buf, strlen(test_buf), 15, 16);
+        char string_buf[20] = {0};
+        int argc = ringslice_scanf(&rs, "+CMGR: \"%15[^\"]\"", string_buf);
+        VERIFY(argc == 1);
+        VERIFY(strcmp("REC UNREAD", string_buf) == 0);
+    }
+
 }  // TEST_GROUP()

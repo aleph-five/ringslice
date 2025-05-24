@@ -173,10 +173,22 @@ ringslice_t ringslice_strstr(ringslice_t const * const me, char const * substr);
 *
 * @return subslice of me slice with suffix, otherwise empty ringslice
 *
-* @note if suffix is empty string, then empty slice will be returned
+* @note if suffix is empty string, then copy of me slice will be returned
 *
 */
 ringslice_t ringslice_subslice_with_suffix(ringslice_t const * const me, ringslice_cnt_t from_idx, char const * suffix);
+
+/*!
+* scanf implementation for ringslice
+* @param[in] rs ringslice instance
+* @param[in] fmt format string
+* @param[out] ... additional arguments, depending on the format string
+*
+* @return a number of receiving arguments succesfully assigned
+    or first on error.
+*
+*/
+int ringslice_scanf(ringslice_t const * restrict const rs, const char *restrict fmt, ...);
 
 #ifdef __cplusplus
 }

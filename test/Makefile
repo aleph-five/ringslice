@@ -57,6 +57,7 @@ INCLUDES := -I. \
 
 # C source files...
 C_SRCS := ringslice.c \
+	ringslice_scanf.c \
 	test.c \
 	et.c \
 	et_host.c
