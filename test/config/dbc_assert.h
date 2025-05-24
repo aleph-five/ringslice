@@ -293,7 +293,6 @@ DBC_NORETURN void DBC_fault_handler(char const * module, int label);
 #define DBC_MODULE_NAME(dummy_)
 
 #define DBC_MODULE_ASSERT(dummy_, label_, expr_)       ((void)0)
-#define DBC_MODULE_ALLEGE(dummy_, label_, expr_)       ((void)0)
 #define DBC_MODULE_ERROR(dummy_, label_)               ((void)0)
 #define DBC_MODULE_REQUIRE(dummy_, label_, expr_)      ((void)0)
 #define DBC_MODULE_ENSURE(dummy_, label_, expr_)       ((void)0)
