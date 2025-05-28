@@ -38,6 +38,11 @@ extern "C" {
 #include "dbc_assert.h"
 #include "ringslice.h"
 
+/**
+ * @defgroup RingsliceUtilities Ringslice Utility functions
+ * @{
+ */
+
  /*!
  * Increments pointer with wrapping around
  * @param[in] curr pointer to increment
@@ -73,7 +78,7 @@ RINGSLICE_INLINE uint8_t *ringslice_ptr_decrement_wrap_around(uint8_t const *cur
 }
 
 /*!
- * Increments index with wrapping around
+ * Shifts index (forward or backward) with wrapping around
  * @param[in] idx index to increment
  * @param[in] inc increment value (positive or negative)
  * @param[in] mod module to wrap around
@@ -86,6 +91,10 @@ RINGSLICE_INLINE ringslice_cnt_t ringslice_index_shift_wrap_around(ringslice_cnt
     DBC_MODULE_REQUIRE(RINGSLICE_MODULE, 12, mod + inc > 0);
     return (idx + mod + inc) % mod;
 }
+
+/*!
+* @}
+*/
 
 #ifdef __cplusplus
 }
