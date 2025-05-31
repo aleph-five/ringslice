@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/aleph-five/ringslice)
+
 # Introduction
 
 Ringslice is a library for working with slices of ring buffers. It provides a set
