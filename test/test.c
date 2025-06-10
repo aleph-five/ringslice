@@ -195,13 +195,71 @@ TEST_GROUP("Basic") {
         VERIFY(c == 0xFFEF);
     }
 
-    SKIP_TEST("Testing ringslice_sscanf(), discontinuous ring buffer, strings") {
-        char const test_buf[] = "R:\"REC UNREAD\"  +CMG";
-        ringslice_t rs = ringslice_initializer((uint8_t *)test_buf, strlen(test_buf), 15, 16);
+    TEST("Testing ringslice_sscanf(), discontinuous ring buffer, excluding scanset") {
+        char const test_buf[] = "R:\"REC UNREAD\"   +CMG";
+        ringslice_t rs = ringslice_initializer((uint8_t *)test_buf,
+                                                strlen(test_buf),
+                                                strlen(test_buf) - strlen("+CMG"),
+                                                strlen(test_buf) - strlen("+CMG") - 1);
         char string_buf[20] = {0};
         int argc = ringslice_scanf(&rs, "+CMGR: \"%15[^\"]\"", string_buf);
         VERIFY(argc == 1);
         VERIFY(strcmp("REC UNREAD", string_buf) == 0);
+    }
+
+    TEST("Testing ringslice_sscanf(), discontinuous ring buffer, including scanset") {
+        char const test_buf[] = "R:\"REC-UNREAD\"   +CMG";
+        ringslice_t rs = ringslice_initializer((uint8_t *)test_buf,
+                                                strlen(test_buf),
+                                                strlen(test_buf) - strlen("+CMG"),
+                                                strlen(test_buf) - strlen("+CMG") - 1);
+        char string_buf[20] = {0};
+        int argc = ringslice_scanf(&rs, "+CMGR: \"%15[-A-Z]\"", string_buf);
+        VERIFY(argc == 1);
+        VERIFY(strcmp("REC-UNREAD", string_buf) == 0);
+    }
+    
+    TEST("Testing ringslice_sscanf(), discontinuous ring buffer, integer before and after scanset") {
+        char const test_buf[] = "C UNREAD\", 15  +CMGR: 42 \"RE";
+        ringslice_t rs = ringslice_initializer((uint8_t *)test_buf,
+                                                strlen(test_buf),
+                                                strlen(test_buf) - strlen("+CMGR: 42 \"RE"),
+                                                strlen(test_buf) - strlen("+CMGR: 42 \"RE") - 1);
+        char string_buf[20] = {0};
+        int intval1 = 0, intval2 = 0;
+        int argc = ringslice_scanf(&rs, "+CMGR: %d \"%15[A-Z ]\",%d", &intval1, string_buf, &intval2);
+        VERIFY(argc == 3);
+        VERIFY(strcmp("REC UNREAD", string_buf) == 0);
+        VERIFY(intval1 == 42);
+        VERIFY(intval2 == 15);
+    }
+
+    TEST("Testing ringslice_sscanf(), discontinuous ring buffer, buffer overflow during scanset") {
+        char const test_buf[] = "C UNREAD\", 15  +CMGR: 42 \"RE";
+        ringslice_t rs = ringslice_initializer((uint8_t *)test_buf,
+                                                strlen(test_buf),
+                                                strlen(test_buf) - strlen("+CMGR: 42 \"RE"),
+                                                strlen(test_buf) - strlen("+CMGR: 42 \"RE") - 1);
+        char string_buf[20] = {0};
+        int intval1 = 0, intval2 = 0;
+        int argc = ringslice_scanf(&rs, "+CMGR: %d \"%5[A-Z ]\",%d", &intval1, string_buf, &intval2);
+        VERIFY(argc == 2);
+        VERIFY(strcmp("REC U", string_buf) == 0);
+        VERIFY(intval1 == 42);
+    }
+
+    TEST("Testing ringslice_sscanf(), discontinuous ring buffer, scanning brackets") {
+        char const test_buf[] = "[]\" 42  +CMGR: \"";
+        ringslice_t rs = ringslice_initializer((uint8_t *)test_buf,
+                                                strlen(test_buf),
+                                                strlen(test_buf) - strlen("+CMGR: \""),
+                                                strlen(test_buf) - strlen("+CMGR: \"") - 1);
+        char string_buf[20] = {0};
+        int val = 0;
+        int argc = ringslice_scanf(&rs, "+CMGR: \"%15[][]\" %d", string_buf, &val);
+        VERIFY(argc == 2);
+        VERIFY(val == 42);
+        VERIFY(strcmp("[]", string_buf) == 0);
     }
 
 }  // TEST_GROUP()

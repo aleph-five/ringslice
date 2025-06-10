@@ -317,6 +317,65 @@ MFMT_WA_TO_TYPE(unsigned long, unsigned int, wa_hex_to_uint, wa_hex_to_unsigned)
 MFMT_DEC_TO_UNSIGNED(unsigned int, uint)
 
 /*!
+* Checks whether a character in a scanset
+* @param[in] c character for check
+* @param[in] scanset pointer to scanset (all the characters after "[" or "[^")
+*
+* @return 1 if c in the scanset, 0 otherwise
+*
+*/
+static int is_in_scanset(char c, const char *scanset) {
+    if(*scanset == ']')  {
+        if(*scanset == c) {
+            return 1;
+        }
+        ++scanset;
+    }
+    if(*scanset == '-')
+    {
+        if(*scanset == c) {
+            return 1;
+        }
+        ++scanset;
+    }
+    while (*scanset != ']') {
+        if(*scanset == '-') {
+            if(scanset[-1] <= c && c <= scanset[1]) {
+                return 1;
+            }
+            ++scanset;
+        }
+        else if (*scanset == c) {
+            return 1;
+        }
+        ++scanset;
+    }
+    return 0;
+}
+
+/*!
+* Returns scanset end
+* @param[in] scanset pointer to scanset (all the characters after "[" or "[^")
+*
+* @return pointer to first encountered ']' character or
+*   pointer to null-character of scanset string
+*
+*/
+static char const * get_scanset_end(const char *scanset) {
+    // if the first character is a right bracket, it is a scanset character,
+    // not the end of scanset
+    if(*scanset == ']')  {
+        ++scanset;
+    }
+    while (1) {
+        if (*scanset == ']' || *scanset == '\0') {
+            return scanset;
+        }
+        ++scanset;
+    }
+}
+
+/*!
 * Parse argument depending on format
 * @param[in] first index of first byte in ringslice
 * @param[in] last index after last byte in ringslice 
@@ -376,6 +435,29 @@ static ringslice_cnt_t wa_parse_arg(ringslice_cnt_t const first,
             ++uintv;
         }
         charp[uintv] = '\0';
+    } else if (*fmt == '[') {
+        fmt++;
+        charp = va_arg(*args, char *);
+        int inversed = 0;
+        if(*fmt == '^')
+        {
+            inversed = 1;
+            ++fmt;
+        }
+
+        char const * scanset_end = get_scanset_end(fmt);
+        if(*scanset_end == '\0') {
+            // No closing bracket found, it is an error
+            return cur;
+        }
+
+        while (cur != last && (inversed ^ is_in_scanset(buf[cur], fmt)) &&
+               (width == 0 || uintv < width)) {
+            charp[uintv] = buf[cur];
+            cur = ringslice_index_shift_wrap_around(cur, 1, size);
+            ++uintv;
+        }
+        charp[uintv] = '\0';
     } else if (*fmt == '%' && buf[cur] == '%') {
         cur = ringslice_index_shift_wrap_around(cur, 1, size);
     }
@@ -412,7 +494,15 @@ int ringslice_scanf(ringslice_t const * const rs, const char * fmt, ...) {
             while (fmt[0] >= '0' && fmt[0] <= '9') {
                 ++fmt;
             }
-            ++fmt;
+            if(fmt[0] == '[') {
+                fmt++;
+                if(*fmt == '^') fmt++;
+                if(*fmt == ']') fmt++;
+                while(*fmt != ']') fmt++;
+                fmt++;
+            } else {
+                ++fmt;
+            }
             cur = tmp;
         } else if (is_space(fmt[0])) {
             ++fmt;
