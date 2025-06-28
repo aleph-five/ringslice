@@ -300,6 +300,18 @@ ringslice_t ringslice_strstr(ringslice_t const * const me, char const * substr);
 ringslice_t ringslice_subslice_with_suffix(ringslice_t const * const me, ringslice_cnt_t from_idx, char const * suffix);
 
 /*!
+* Checks whether a string is a prefix of ringslice
+* @param[in] me ringslice instance which is checked for prefix with string
+* @param[in] str string for check
+*
+* @return 0 if string is a prefix of ringslice,
+*   negative value if ringslice appears before str in lexicographical order,
+*   positive value if ringslice appears after str in lexicographical order
+*
+*/
+int ringslice_prefixcmp(ringslice_t const * const me, char const * str);
+
+/*!
 * scanf implementation for ringslice
 * @param[in] rs ringslice instance
 * @param[in] fmt format string

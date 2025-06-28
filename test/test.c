@@ -262,4 +262,31 @@ TEST_GROUP("Basic") {
         VERIFY(strcmp("[]", string_buf) == 0);
     }
 
+    TEST("Testing ringslice_prefixcmp(), discontinuous ring buffer") {
+        char const slice_str_beg[] = "Hell";
+        char const slice_str_end[] = "o World!";
+
+        char buf[sizeof("Hello World!") + 10];
+
+        ringslice_cnt_t buffer_size = (ringslice_cnt_t)ARRAY_NELEM(buf);
+
+        ringslice_cnt_t last = (ringslice_cnt_t)strlen(slice_str_end);
+        ringslice_cnt_t first = (buffer_size - (ringslice_cnt_t)strlen(slice_str_beg)) % buffer_size;
+
+        memcpy(buf, slice_str_end, strlen(slice_str_end));            // copy the end part of string into beginning of buffer
+        memcpy(&(buf[first]), slice_str_beg, strlen(slice_str_beg));  // copy the beginning of string into part of buffer
+
+        ringslice_t rs = ringslice_initializer((uint8_t *)buf, buffer_size, first, last);
+
+        VERIFY(ringslice_prefixcmp(&rs, "Hello World!") == 0);
+        VERIFY(ringslice_prefixcmp(&rs, "Hello World") == 0);
+        VERIFY(ringslice_prefixcmp(&rs, "Hello W") == 0);
+        VERIFY(ringslice_prefixcmp(&rs, "Hello ") == 0);
+        VERIFY(ringslice_prefixcmp(&rs, "Hello") == 0);
+        VERIFY(ringslice_prefixcmp(&rs, "Hello!") < 0);
+        VERIFY(ringslice_prefixcmp(&rs, "Hello there") < 0);
+        VERIFY(ringslice_prefixcmp(&rs, "Hello Nick") > 0);
+        VERIFY(ringslice_prefixcmp(&rs, "Hello World! ") < 0);
+    }
+
 }  // TEST_GROUP()

@@ -105,3 +105,22 @@ ringslice_t ringslice_subslice_with_suffix(ringslice_t const *const me, ringslic
 
     return resp_slice;
 }
+
+int ringslice_prefixcmp(ringslice_t const *const me, char const *str) {
+    uint8_t const *buf = me->buf;
+    ringslice_cnt_t idx = me->first;
+    ringslice_cnt_t last = me->last;
+    ringslice_cnt_t size = me->buf_size;
+
+    while (*str && idx != last) {
+        int diff = (int)buf[idx] - (int)*str;
+        if (diff) {
+            return diff;
+        }
+
+        str++;
+        idx = ringslice_index_shift_wrap_around(idx, 1, size);
+    }
+
+    return -(int)*str;
+}
